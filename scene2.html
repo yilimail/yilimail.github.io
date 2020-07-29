@@ -11,7 +11,7 @@
     <center>
         <p>
             <font size="6" face="Arial Black">
-                US COVID-19 Confirmed and Death Cases By Time
+                US COVID-19 Death Ratio By Time
             </font>
         </p>
     </center>
@@ -31,7 +31,7 @@
 <script>
 
 // set the dimensions and margins of the graph
-var margin = {top: 30, right: 30, bottom: 90, left: 400},
+var margin = {top: 90, right: 400, bottom: 90, left: 400},
     width = 1600 - margin.left - margin.right,
     height = 650 - margin.top - margin.bottom;
 
@@ -44,7 +44,7 @@ var svg = d3.select("#my_dataviz")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("https://raw.githubusercontent.com/yilimail/yilimail.github.io/master/data/US_Confirmed_Death_cases.csv", function(d) {
+d3.csv("https://raw.githubusercontent.com/yilimail/yilimail.github.io/master/data/US_Death_Ratio.csv", function(d) {
     return { date : d3.timeParse("%Y-%m-%d")(d.date), value : d.Ratio }
 },
 
@@ -62,43 +62,102 @@ svg.append("g")
 var y = d3.scaleLinear()
   .domain([0, d3.max(data, function(d) { return +d.value; })])
   .range([height,0]);
-
-svg.append("circle").attr("cx",50).attr("cy",50).attr("r", 6).style("fill", "#FF0000")
-svg.append("text").attr("x", 70).attr("y", 50).text("Confirmed Cases").style("font-size", "17px").attr("alignment-baseline","middle")
-
-
 svg.append("g")
   .call(d3.axisLeft(y));
 
+// This allows to find the closest X index of the mouse:
+var bisect = d3.bisector(function(d) { return d.date; }).left;
+// Create the circle that travels along the curve of chart
+var focus = svg
+  .append('g')
+  .append('circle')
+  .style("fill", "none")
+  .attr("stroke", "black")
+  .attr('r', 8.5)
+  .style("opacity", 0)
+ 
+// Create the text that travels along the curve of chart
+var focusText = svg
+  .append('g')
+  .append('text')
+    .style("opacity", 0)
+    .attr("text-anchor", "left")
+    .attr("alignment-baseline", "middle")
+
+var focusText2 = svg
+  .append('g')
+  .append('text')
+    .style("opacity", 0)
+    .attr("text-anchor", "left")
+    .attr("alignment-baseline", "middle")
+
+svg.append("circle").attr("cx",50).attr("cy",50).attr("r", 6).style("fill", "#273F8A")
+svg.append("text").attr("x", 70).attr("y", 50).text("Death Ratio").style("font-size", "17px").attr("alignment-baseline","middle")
+
+
 // Add the line
 svg.append("path")
+  .attr("id", "line1")
   .datum(data)
   .attr("fill", "none")
-  .attr("stroke", "red")
+  .attr("stroke", "#273F8A")
   .attr("stroke-width", 4.5)
   .attr("d", d3.line()
     .x(function(d) { return x(d.date) })
     .y(function(d) { return y(d.value) })
     )
-svg.append("path")
-  .datum(data)
-  .attr("fill", "none")
-  .attr("stroke", "black")
-  .attr("stroke-width", 4.5)
-  .attr("d", d3.line()
-    .x(function(d) { return x(d.date) })
-    .y(function(d) { return y(d.value2) })
-    )
+// Create a rect on top of the svg area: this rectangle recovers mouse position
+svg
+  .append('rect')
+  .style("fill", "none")
+  .style("pointer-events", "all")
+  .attr('width', width)
+  .attr('height', height)
+  .on('mouseover', mouseover)
+  .on('mousemove', mousemove)
+  .on('mouseout', mouseout);
+// What happens when the mouse move -> show the annotations at the right positions.
+function mouseover() {
+  focus.style("opacity", 1)
+  focusText.style("opacity",1)
+  focusText2.style("opacity",1)
+}
+
+function mousemove() {
+  // recover coordinate we need
+  var x0 = x.invert(d3.mouse(this)[0]);
+  var i = bisect(data, x0, 1);
+  selectedData = data[i]
+  focus
+    .attr("cx", x(selectedData.date))
+    .attr("cy", y(selectedData.value))
+//const Time=selectedData.date.timeParse("%Y-%m-%d");
+focusText
+    .html(selectedData.date)
+    .attr("x", x(selectedData.date))
+    .attr("y", y(selectedData.value)-40)
+
+focusText2
+    .html("Death Ratio="+selectedData.value)
+    .attr("x", x(selectedData.date))
+    .attr("y", y(selectedData.value)-20)
+}
+function mouseout() {
+  focus.style("opacity", 0)
+  focusText.style("opacity", 0)
+}
 })
+
+
 </script>
 
     <center>
         <p></p>
         <a class="button1" href="index.html" style="margin-right: 200px">Main</a>
         <font size="5" face="Arial Black">
-            <a class="scene1" href="scene1.html">Confirmed/Death Cases Numbers</a>
+            <a class="scene2" href="scene1.html">Confirmed/Death Cases Numbers</a>
             |
-            <a class="scene2" href="scene2.html">US COVID19 Death Ratio</a>
+            <a class="scene1" href="scene2.html">US COVID19 Death Ratio</a>
         </font>
         <a class="button1" href="scene3.html" style="margin-left: 200px" >Next</a>
     </center>
