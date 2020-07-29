@@ -45,7 +45,7 @@ var svg = d3.select("#my_dataviz")
           "translate(" + margin.left + "," + margin.top + ")");
 
 d3.csv("https://raw.githubusercontent.com/yilimail/yilimail.github.io/master/data/US_Confirmed_Death_cases.csv", function(d) {
-    return { date : d3.timeParse("%Y-%m-%d")(d.date), value : d.Confirmed, value2 : d.Death }
+    return { date : d3.timeParse("%m/%d/%Y")(d.date), value : d.Confirmed, value2 : d.Death }
 },
 
 function(data) {
